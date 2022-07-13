@@ -19,6 +19,6 @@ export const postCreateValidation = [
   body('imageUrl', 'Неверная ссылка на изображение').optional().isString(),
 ];
 export const commentCreateValidation = [
-  body('text', 'Введите текст статьи').isLength({ min: 3 }).isString(),
+  body('text', 'Введите текст комментария').isString(),
   body('postId', 'Ошибка при загрузке комментария').isString(),
 ];

@@ -1,4 +1,5 @@
 import PostModel from '../models/Post.js';
+import CommentModel from '../models/Comment.js';
 
 export const getLastTags = async (req, res) => {
   try {
@@ -23,7 +24,7 @@ export const getLastTags = async (req, res) => {
 
 export const getPostsPopular = async (req, res) => {
   try {
-    const posts = await PostModel.find().sort([['viewsCount', -1]]).exec();
+    const posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
     res.json(posts)
   } catch (err) {
     console.log(err);
@@ -36,7 +37,7 @@ export const getPostsPopular = async (req, res) => {
 
 export const getPostsTags = async (req, res) => {
   try {
-    const posts = await PostModel.find().limit(5).exec();
+    const posts = await PostModel.find().populate('user').limit(5).exec();
     const tagsPosts = posts.filter(item => item.tags.includes(req.params.id))
     res.json(tagsPosts)
   } catch (err) {
@@ -49,7 +50,7 @@ export const getPostsTags = async (req, res) => {
 
 export const getPostsTagsPopular = async (req, res) => {
   try {
-    const posts = await PostModel.find().sort([['viewsCount', -1]]).exec();
+    const posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
     const tagsPosts = posts.filter(item => item.tags.includes(req.params.id));
     res.json(tagsPosts)
   } catch (err) {
@@ -114,6 +115,30 @@ export const getOne = async (req, res) => {
 export const remove = async (req, res) => {
   try {
     const postId = req.params.id;
+    const comments = await CommentModel.find().populate('user').exec();
+    const filteredComments = comments.filter(item => item.postId === postId);
+
+    filteredComments.forEach(item => {
+      CommentModel.findOneAndDelete(
+        {
+          _id: item._id
+        },
+        (err, doc) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({
+              message: 'Не удалось удалить комментарии',
+            });
+          }
+  
+          if (!doc) {
+            return res.status(404).json({
+              message: 'Комментарий не найдена',
+            });
+          }
+        }
+        )
+    })
 
     PostModel.findOneAndDelete(
       {
@@ -180,7 +205,7 @@ export const update = async (req, res) => {
         text: req.body.text,
         imageUrl: req.body.imageUrl,
         user: req.userId,
-        tags: req.body.tags.split(','),
+        tags: req.body.tags.split(',').map(item => item.trim()),
       },
     );
 
