@@ -93,8 +93,16 @@ app.patch(
 );
 
 app.get('/comments', CommentController.getAll);
+app.get('/comments/:id', CommentController.getPostsComments);
 app.post('/comments', checkAuth, commentCreateValidation, handleValidationErrors, CommentController.create);
-
+app.delete('/comments/:id', checkAuth, CommentController.remove);
+app.patch(
+  '/comments/:id',
+  checkAuth,
+  commentCreateValidation,
+  handleValidationErrors,
+  CommentController.update,
+);
 
 app.listen(process.env.PORT || 4444, (err) => {
   if (err) {
