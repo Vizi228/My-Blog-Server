@@ -22,37 +22,16 @@ export const getLastTags = async (req, res) => {
   }
 };
 
-export const getPostsPopular = async (req, res) => {
-  try {
-    const posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
-    res.json(posts)
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: 'Не удалось получить статьи',
-    });
-  }
-};
-
-
 export const getPostsTags = async (req, res) => {
   try {
-    const posts = await PostModel.find().populate('user').limit(5).exec();
-    const tagsPosts = posts.filter(item => item.tags.includes(req.params.id))
-    res.json(tagsPosts)
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: 'Не удалось получить тэги',
-    });
-  }
-};
-
-export const getPostsTagsPopular = async (req, res) => {
-  try {
-    const posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
+    let posts
+    if(req.query.sort === 'popular') {
+      posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
+    } else {
+      posts = await PostModel.find().populate('user').exec();
+    }
     const tagsPosts = posts.filter(item => item.tags.includes(req.params.id));
-    res.json(tagsPosts)
+    res.json(tagsPosts.slice(0,5))
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -63,7 +42,15 @@ export const getPostsTagsPopular = async (req, res) => {
 
 export const getAll = async (req, res) => {
   try {
-    const posts = await PostModel.find().populate('user').exec();
+    let posts
+    if(req.query.sort === 'popular') {
+      posts = await PostModel.find().populate('user').sort([['viewsCount', -1]]).exec();
+    } else {
+      posts = await PostModel.find().populate('user').exec();
+    }
+    if(req.query.limit) {
+      posts = posts.slice(0, req.query.limit);
+    }
     res.json(posts);
   } catch (err) {
     console.log(err);
